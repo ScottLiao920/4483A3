@@ -10,3 +10,5 @@ notebook
 model
 
 *.zip
+
+raytune*
