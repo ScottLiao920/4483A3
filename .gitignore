@@ -7,3 +7,6 @@
 *.iml
 
 notebook
+model
+
+*.zip
