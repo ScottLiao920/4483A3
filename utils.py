@@ -62,7 +62,7 @@ class titanicDataset(Dataset):
 
 
 class tabularModel(nn.Module):
-    def __init__(self, embedding_size=None, categorical_columns=None, continuous_columns=None):
+    def __init__(self, embedding_size=None, categorical_columns=None, continuous_columns=None, fc_size=[256, 64], dropout=[0.6, 0.3]):
         super().__init__()
         self.categorical_columns = categorical_columns
         self.continuous_columns = continuous_columns
@@ -72,14 +72,14 @@ class tabularModel(nn.Module):
                 self.embeddings = nn.ModuleList([nn.Embedding(categories, size) for categories, size in embedding_size])
                 n_emb = sum(e.embedding_dim for e in self.embeddings)  # length of all embeddings combined
                 self.n_emb, self.n_cont = sum([tmp for _, tmp in embedding_size]), len(continuous_columns)
-                self.lin1 = nn.Linear(self.n_emb + self.n_cont, 256)
-                self.lin2 = nn.Linear(256, 64)
-                self.lin3 = nn.Linear(64, 2)
+                self.lin1 = nn.Linear(self.n_emb + self.n_cont, fc_size[0])
+                self.lin2 = nn.Linear(fc_size[0], fc_size[1])
+                self.lin3 = nn.Linear(fc_size[1], 2)
                 self.bn1 = nn.BatchNorm1d(self.n_cont)
-                self.bn2 = nn.BatchNorm1d(256)
-                self.bn3 = nn.BatchNorm1d(64)
-                self.emb_drop = nn.Dropout(0.6)
-                self.drops = nn.Dropout(0.3)
+                self.bn2 = nn.BatchNorm1d(fc_size[0])
+                self.bn3 = nn.BatchNorm1d(fc_size[1])
+                self.emb_drop = nn.Dropout(dropout[0])
+                self.drops = nn.Dropout(dropout[1])
             except AssertionError:
                 print("length of embedding size must be equal to the size of categorical columns!")
         else:
@@ -93,8 +93,8 @@ class tabularModel(nn.Module):
         for cat in self.continuous_columns:
             x_cont.append(x[cat])
         # reshape two tensors to shape (batch_size, num_columns, 1)
-        x_cat = torch.cat(x_cat).reshape(len(self.categorical_columns), -1).permute(1, 0).long()
-        x_cont = torch.cat(x_cont, 0).reshape(len(self.continuous_columns), -1).permute(1, 0).double()
+        x_cat = torch.cat(x_cat).reshape(len(self.categorical_columns), -1).permute(1, 0).long().to(next(self.parameters()).device)
+        x_cont = torch.cat(x_cont, 0).reshape(len(self.continuous_columns), -1).permute(1, 0).double().to(next(self.parameters()).device)
 
         x = [e(x_cat[:, i]) for i, e in enumerate(self.embeddings)]
         x = torch.cat(x, 1)

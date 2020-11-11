@@ -8,7 +8,10 @@
 
 notebook
 model
+data
 
 *.zip
-
+*.csv
+*.xlsx
+*.pyc
 raytune*
