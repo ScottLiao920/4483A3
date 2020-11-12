@@ -75,7 +75,6 @@ class tabularModel(nn.Module):
             try:
                 assert len(embedding_size) == len(categorical_columns)
                 self.embeddings = nn.ModuleList([nn.Embedding(categories, size) for categories, size in embedding_size])
-                n_emb = sum(e.embedding_dim for e in self.embeddings)  # length of all embeddings combined
                 self.n_emb, self.n_cont = sum([tmp for _, tmp in embedding_size]), len(continuous_columns)
                 self.lin1 = nn.Linear(self.n_emb + self.n_cont, fc_size[0])
                 self.lin2 = nn.Linear(fc_size[0], fc_size[1])
