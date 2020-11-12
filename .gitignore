@@ -8,10 +8,11 @@
 
 notebook
 model
-data
-
+train.csv
+test.csv
+cifar-*
 *.zip
-*.csv
 *.xlsx
 *.pyc
+event*
 raytune*

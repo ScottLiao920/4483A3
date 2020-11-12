@@ -7,12 +7,15 @@ from torch.utils.data import Dataset
 
 
 class titanicDataset(Dataset):
-    def __init__(self, path):
+    def __init__(self, path, train=True):
         super(titanicDataset, self).__init__()
         raw_data = pd.read_csv(path)
         features = ['Pclass', 'Sex', 'Age', 'Fare', 'Embarked']
-        label = ['Survived']
-        self.y = raw_data.loc[:, label]
+        self.train = train
+        if train:
+            label = ['Survived']
+            self.y = raw_data.loc[:, label]
+            self.y = self.y.to_numpy()
 
         def binning(x):
             if x == 0:
@@ -45,21 +48,22 @@ class titanicDataset(Dataset):
         self.x['Pclass'] = self.x['Pclass'].astype(float) - 1.0
         self.x['Age'] = self.x['Age'].fillna(float(int(self.x['Age'].mean())))
         self.x['Fare'] = self.x['Fare'].fillna(self.x['Fare'].mean())
-
+        
         # as torch dataloader doesn't support returning pd dataframe, convert to a dictionary
         self.x = self.x.to_dict()
-        self.y = self.y.to_numpy()
         self.columns = list(self.x.keys())
 
     def __len__(self):
-        return self.y.size
+        return len(self.x['Age'])
 
     def __getitem__(self, index):
         out_x = {}
         for col in self.columns:
             out_x[col] = self.x[col][index]
-        return out_x, self.y[index]
-
+        if self.train:
+            return out_x, self.y[index]
+        else:
+            return out_x
 
 class tabularModel(nn.Module):
     def __init__(self, embedding_size=None, categorical_columns=None, continuous_columns=None, fc_size=[256, 64], dropout=[0.6, 0.3]):
