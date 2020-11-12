@@ -1,5 +1,4 @@
 import pandas as pd
-import os
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -48,7 +47,7 @@ class titanicDataset(Dataset):
         self.x['Pclass'] = self.x['Pclass'].astype(float) - 1.0
         self.x['Age'] = self.x['Age'].fillna(float(int(self.x['Age'].mean())))
         self.x['Fare'] = self.x['Fare'].fillna(self.x['Fare'].mean())
-        
+
         # as torch dataloader doesn't support returning pd dataframe, convert to a dictionary
         self.x = self.x.to_dict()
         self.columns = list(self.x.keys())
@@ -65,8 +64,10 @@ class titanicDataset(Dataset):
         else:
             return out_x
 
+
 class tabularModel(nn.Module):
-    def __init__(self, embedding_size=None, categorical_columns=None, continuous_columns=None, fc_size=[256, 64], dropout=[0.6, 0.3]):
+    def __init__(self, embedding_size=None, categorical_columns=None, continuous_columns=None, fc_size=[256, 64],
+                 dropout=[0.6, 0.3]):
         super().__init__()
         self.categorical_columns = categorical_columns
         self.continuous_columns = continuous_columns
@@ -97,8 +98,10 @@ class tabularModel(nn.Module):
         for cat in self.continuous_columns:
             x_cont.append(x[cat])
         # reshape two tensors to shape (batch_size, num_columns, 1)
-        x_cat = torch.cat(x_cat).reshape(len(self.categorical_columns), -1).permute(1, 0).long().to(next(self.parameters()).device)
-        x_cont = torch.cat(x_cont, 0).reshape(len(self.continuous_columns), -1).permute(1, 0).double().to(next(self.parameters()).device)
+        x_cat = torch.cat(x_cat).reshape(len(self.categorical_columns), -1).permute(1, 0).long().to(
+            next(self.parameters()).device)
+        x_cont = torch.cat(x_cont, 0).reshape(len(self.continuous_columns), -1).permute(1, 0).double().to(
+            next(self.parameters()).device)
 
         x = [e(x_cat[:, i]) for i, e in enumerate(self.embeddings)]
         x = torch.cat(x, 1)

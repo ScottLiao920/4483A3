@@ -2,15 +2,15 @@ import os
 
 import pandas as pd
 from torch.utils.data import DataLoader
-
+from tensorboardX import SummaryWriter
 import torch
-
+import torch.nn as nn
 from utils import tabularModel, titanicDataset
 
 
 def main():
     # %%
-
+    writer = SummaryWriter('nn_structure')
     train_data = pd.read_csv(os.path.join('data', 'titanic', 'test.csv'))
 
     # %%
@@ -60,26 +60,8 @@ def main():
     num_epoch = 300
 
     # %%
-    model.train()
-    for epoch in range(num_epoch):
-        for i, (x, y) in enumerate(train_dataloader):
-            optim.zero_grad()
-            pred = model(x)
-            loss = lossfunc(pred, y.squeeze().long())
-            loss.backward()
-            optim.step()
-
-            if i % 2 == 0:
-                with torch.no_grad():
-                    model.eval()
-                    x, y = next(iter(valid_dataloader))
-                    pred = model(x)
-                    valid_loss = lossfunc(pred, y.squeeze().long())
-                    accu = (pred.argmax(-1) == y.squeeze()).sum() // len(valid_dataset)
-                print("Epoch: {} | Train loss: {:.4f} | Valid loss: {:.4f} | Valid Accu: {:.2f}".format(
-                    epoch, loss.item(), valid_loss.item(), accu.item()
-                ))
-                model.train()
+    x, y = next(iter(train_dataloader))
+    writer.add_graph(model, x)
 
     # %%
 
